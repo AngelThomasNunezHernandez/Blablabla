@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SonaReplica Web App</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <h1>SonaReplica</h1>
+      <p>Quality Platform</p>
+      <nav>
+        <a class="active" href="#">Dashboard</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <h2>Dashboard Web completo</h2>
+          <p>Ahora ejecuta lógica real vía API en la misma web.</p>
+        </div>
+        <button id="analyzeBtn">Ejecutar análisis</button>
+      </header>
+
+      <section class="toolbar">
+        <label>
+          Proyecto
+          <select id="projectFilter"></select>
+        </label>
+        <label>
+          Severidad
+          <select id="severityFilter">
+            <option value="">Todas</option>
+            <option value="CRITICAL">CRITICAL</option>
+            <option value="HIGH">HIGH</option>
+            <option value="MEDIUM">MEDIUM</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="cards" id="kpiCards"></section>
+
+      <section class="grid">
+        <article class="panel">
+          <h3>Issues</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Proyecto</th>
+                <th>Tipo</th>
+                <th>Severidad</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="issuesTable"></tbody>
+          </table>
+        </article>
+
+        <article class="panel">
+          <h3>Quality Gate</h3>
+          <ul id="gateList"></ul>
+        </article>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
