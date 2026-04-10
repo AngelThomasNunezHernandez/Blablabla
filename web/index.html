@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SonaReplica Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <h1>SonaReplica</h1>
+      <nav>
+        <a class="active" href="#">Overview</a>
+        <a href="#">Projects</a>
+        <a href="#">Issues</a>
+        <a href="#">Quality Gates</a>
+        <a href="#">Security</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div>
+          <h2>Panel de Calidad</h2>
+          <p>Simulación web estilo SonarQube con métricas clave por proyecto.</p>
+        </div>
+        <button id="refreshBtn">Actualizar métricas</button>
+      </header>
+
+      <section class="cards" id="kpiCards"></section>
+
+      <section class="grid">
+        <article class="panel">
+          <h3>Issues recientes</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Proyecto</th>
+                <th>Tipo</th>
+                <th>Severidad</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="issuesTable"></tbody>
+          </table>
+        </article>
+
+        <article class="panel">
+          <h3>Quality Gate</h3>
+          <ul id="gateList"></ul>
+        </article>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
