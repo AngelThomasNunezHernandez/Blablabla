@@ -1,38 +1,45 @@
-const state = {
-  kpis: [
-    { label: 'Bugs', value: 31 },
-    { label: 'Vulnerabilidades', value: 7 },
-    { label: 'Code Smells', value: 143 },
-    { label: 'Cobertura', value: '78%' },
-  ],
-  issues: [
-    { project: 'api-core', type: 'Bug', severity: 'Alta', status: 'Open' },
-    { project: 'frontend-ui', type: 'Code Smell', severity: 'Media', status: 'Open' },
-    { project: 'worker-jobs', type: 'Vulnerability', severity: 'Crítica', status: 'Confirmed' },
-    { project: 'api-core', type: 'Security Hotspot', severity: 'Media', status: 'Reviewed' },
-  ],
-  gates: [
-    { rule: 'Coverage > 80%', status: 'warning' },
-    { rule: 'New Bugs = 0', status: 'fail' },
-    { rule: 'New Vulnerabilities = 0', status: 'fail' },
-    { rule: 'Duplicación < 3%', status: 'pass' },
-  ],
-};
+const projectFilter = document.getElementById('projectFilter');
+const severityFilter = document.getElementById('severityFilter');
 
-function statusClass(label) {
-  if (label === 'pass') return 'ok';
-  if (label === 'warning') return 'warn';
-  return 'bad';
+async function getJson(url, options = {}) {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`Error ${response.status} en ${url}`);
+  }
+  return response.json();
 }
 
-function render() {
-  document.getElementById('kpiCards').innerHTML = state.kpis
-    .map((k) => `<article class="card"><small>${k.label}</small><strong>${k.value}</strong></article>`)
-    .join('');
+function renderKpis(projects) {
+  const totals = projects.reduce(
+    (acc, p) => {
+      acc.bugs += p.bugs;
+      acc.vulns += p.vulnerabilities;
+      acc.smells += p.code_smells;
+      acc.coverage += p.coverage;
+      return acc;
+    },
+    { bugs: 0, vulns: 0, smells: 0, coverage: 0 }
+  );
 
-  document.getElementById('issuesTable').innerHTML = state.issues
+  const avgCoverage = projects.length ? (totals.coverage / projects.length).toFixed(1) : '0.0';
+
+  const cards = [
+    { label: 'Bugs', value: totals.bugs },
+    { label: 'Vulnerabilidades', value: totals.vulns },
+    { label: 'Code Smells', value: totals.smells },
+    { label: 'Cobertura media', value: `${avgCoverage}%` },
+  ];
+
+  document.getElementById('kpiCards').innerHTML = cards
+    .map((c) => `<article class="card"><small>${c.label}</small><strong>${c.value}</strong></article>`)
+    .join('');
+}
+
+function renderIssues(issues) {
+  document.getElementById('issuesTable').innerHTML = issues
     .map(
       (issue) => `<tr>
+        <td>${issue.id}</td>
         <td>${issue.project}</td>
         <td>${issue.type}</td>
         <td>${issue.severity}</td>
@@ -40,18 +47,46 @@ function render() {
       </tr>`
     )
     .join('');
+}
 
-  document.getElementById('gateList').innerHTML = state.gates
-    .map(
-      (gate) => `<li><span class="badge ${statusClass(gate.status)}">${gate.status.toUpperCase()}</span> ${gate.rule}</li>`
-    )
+function renderGate(gate) {
+  document.getElementById('gateList').innerHTML = gate
+    .map((g) => `<li><span class="badge ${g.status.toLowerCase()}">${g.status}</span> ${g.rule}</li>`)
     .join('');
 }
 
-document.getElementById('refreshBtn').addEventListener('click', () => {
-  state.kpis[0].value = Math.max(0, state.kpis[0].value - 1);
-  state.kpis[2].value = Math.max(0, state.kpis[2].value - 2);
-  render();
+async function loadProjects() {
+  const projects = await getJson('/api/projects');
+  projectFilter.innerHTML = '<option value="">Todos</option>' +
+    projects.map((p) => `<option value="${p.key}">${p.name}</option>`).join('');
+  return projects;
+}
+
+async function loadIssues() {
+  const params = new URLSearchParams();
+  if (projectFilter.value) params.set('project', projectFilter.value);
+  if (severityFilter.value) params.set('severity', severityFilter.value);
+
+  const issues = await getJson(`/api/issues?${params.toString()}`);
+  renderIssues(issues);
+}
+
+async function refreshDashboard() {
+  const [projects, gate] = await Promise.all([getJson('/api/projects'), getJson('/api/quality-gate')]);
+  renderKpis(projects);
+  renderGate(gate);
+  await loadIssues();
+}
+
+document.getElementById('analyzeBtn').addEventListener('click', async () => {
+  await getJson('/api/analyze', { method: 'POST' });
+  await refreshDashboard();
 });
 
-render();
+projectFilter.addEventListener('change', loadIssues);
+severityFilter.addEventListener('change', loadIssues);
+
+(async () => {
+  await loadProjects();
+  await refreshDashboard();
+})();
